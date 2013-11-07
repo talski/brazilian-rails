@@ -15,18 +15,27 @@ ZIPS_WITH_NO_ADDRESS_ASSOCIATED = [12345678, '12345678', '12.345678', '12345-678
 URL = BuscaEndereco::WEB_SERVICE_REPUBLICA_VIRTUAL_URL
 
 class BuscaEnderecoTest < Test::Unit::TestCase
+  def test_if_warn_for_por_cep_usage
+    cep = VALID_ZIPS.sample
+    expected = {:tipo_logradouro => 'Avenida', :logradouro => 'das Américas', :bairro => 'Barra da Tijuca', :cidade => 'Rio de Janeiro', :uf => 'RJ', :cep => cep}
+    BuscaEndereco.expects(:warn).with("DEPRECATION WARNING: O método `BuscaEnderedo.por_cep` será removido. Use o BuscaEndereco.cep e faça os ajustes necessarios")
+    BuscaEndereco.expects(:cep).with(cep).returns(expected)
+    
+    assert_equal expected.values, BuscaEndereco.por_cep(cep)
+  end
+  
   def test_raise_without_service_on_both_web_services
     FakeWeb.register_uri(:get, "#{URL}#{22640100}", :status => 504, :body => "Service Unavailable")
     
     assert_raise RuntimeError, "A busca de endereço por CEP está indisponível no momento." do
-      BuscaEndereco.por_cep(22640100)
+      BuscaEndereco.cep(22640100)
     end
   end
 
   INVALID_ZIPS.each do |invalid_zip|
     define_method "test_raise_for_invalid_zip_code_#{invalid_zip}" do
       assert_raise RuntimeError, "O CEP informado possui um formato inválido." do
-        BuscaEndereco.por_cep(invalid_zip)
+        BuscaEndereco.cep(invalid_zip)
       end
     end
   end
@@ -34,24 +43,24 @@ class BuscaEnderecoTest < Test::Unit::TestCase
   VALID_ZIPS.each do |valid_zip|
     define_method "test_valid_code_#{valid_zip}" do
       cep = VALID_ZIPS.first.to_s
-      expected = ['Avenida', 'das Américas', 'Barra da Tijuca', 'Rio de Janeiro', 'RJ', cep]
+      expected = {:tipo_logradouro => 'Avenida', :logradouro => 'das Américas', :bairro => 'Barra da Tijuca', :cidade => 'Rio de Janeiro', :uf => 'RJ', :cep => cep}
       body = "&resultado=1&resultado_txt=sucesso+-+cep+completo&uf=RJ&cidade=Rio+de+Janeiro&bairro=Barra+da+Tijuca&tipo_logradouro=Avenida&logradouro=das+Am%E9ricas"
 
       FakeWeb.register_uri(:get, "#{URL}#{cep}", :body => body)
 
-      assert_equal expected,BuscaEndereco.por_cep(valid_zip)
+      assert_equal expected,BuscaEndereco.cep(valid_zip)
     end
   end
   
   VALID_ZIPS_WITH_ZERO_AT_BEGINNING.each do |valid_zip|
     define_method "test_valid_code_#{valid_zip}" do
       cep = VALID_ZIPS_WITH_ZERO_AT_BEGINNING.first
-      expected = ["Avenida", "Raimundo Pereira de Magalhães", "Jardim Iris", "São Paulo", "SP", cep]
+      expected = {:tipo_logradouro => "Avenida", :logradouro => "Raimundo Pereira de Magalhães", :bairro => "Jardim Iris", :cidade => "São Paulo", :uf => "SP", :cep => cep}
       body = "&resultado=1&resultado_txt=sucesso+-+cep+completo&uf=SP&cidade=S%E3o+Paulo&bairro=Jardim+Iris&tipo_logradouro=Avenida&logradouro=Raimundo+Pereira+de+Magalh%E3es"
       
       FakeWeb.register_uri(:get, "#{URL}#{cep}", :body => body)
   
-      assert_equal expected, BuscaEndereco.por_cep(cep)
+      assert_equal expected, BuscaEndereco.cep(cep)
     end
   end
 
@@ -62,7 +71,7 @@ class BuscaEnderecoTest < Test::Unit::TestCase
     assert_raise RuntimeError, "CEP #{cep} não encontrado." do
       FakeWeb.register_uri(:get, "#{URL}#{cep}", :body => body)
 
-      BuscaEndereco.por_cep("12345678")
+      BuscaEndereco.cep("12345678")
     end
   end
 end

@@ -11,7 +11,7 @@ env = %(PKG_BUILD="#{ENV["PKG_BUILD"]}") if ENV["PKG_BUILD"]
 PROJECTS_WITH_TEST_UNIT = %w(brnumeros brdinheiro brcep brdata brhelper brstring brI18n)
 PROJECTS_WITH_RSPEC = %w(brcpfcnpj)
 PROJECTS = PROJECTS_WITH_TEST_UNIT + PROJECTS_WITH_RSPEC
-PKG_VERSION = "3.1.0"
+PKG_VERSION = "3.3.0"
 
 Dir["#{File.dirname(__FILE__)}/*/lib/*/version.rb"].each do |version_path|
   require version_path
@@ -87,6 +87,7 @@ Rake::RDocTask.new do |rdoc|
 
   PROJECTS.each do |project|
     rdoc.rdoc_files.include("#{project}/README")
+    rdoc.rdoc_files.include("#{project}/README.mkdn")
     rdoc.rdoc_files.include("#{project}/CHANGELOG")
     rdoc.rdoc_files.include("#{project}/lib/**/*.rb")
   end
